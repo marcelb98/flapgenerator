@@ -1,0 +1,14 @@
+{
+  "delay_start": 0,
+  "delay_flap": 0,
+  "interval_flap": "100us",
+  "routes": {
+    "1.1.0.0/24": {
+      "community": "[666:666]"
+    },
+    "1.1.0.0/25": {}
+  },
+  "flapping": [
+    "1.1.0.0/24"
+  ]
+}

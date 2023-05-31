@@ -25,6 +25,24 @@ def get_announce(nlri, attributes):
         exastring = exastring + " " + attr + " " + attributes[attr]
     return exastring+'\n'
 
+# Helper function which takes integer in seconds or string with suffix s, ms, us and returns integer in seconds
+def parse_time_str(time):
+    time_orig = time
+    if isinstance(time, int):
+        pass
+    elif time.isnumeric():
+        time = int(time)
+    elif time.endswith("us"):
+        time = int(time[:-2]) / 1000000
+    elif time.endswith("ms"):
+        time = int(time[:-2]) / 1000
+    elif time.endswith("s"):
+        time = int(time[:-1])
+    else:
+        print(f"Could not parse time {time_orig}.")
+        sys.exit(1)
+    return time
+
 # Read setup which contains all routes and list of routes to flap
 with open("/tmp/flapgenerator_setup.json", "r") as f:
     try:
@@ -48,7 +66,7 @@ del routes, flapping
 
 # wait requested start time
 if 'delay_start' in setup:
-    time.sleep(setup['delay_start'])
+    time.sleep(parse_time_str(setup['delay_start']))
 
 # initial announce of all routes
 for route in routes_exa:
@@ -57,26 +75,14 @@ sys.stdout.flush()
 
 # wait with flapping if requested
 if 'delay_flap' in setup:
-    time.sleep(setup['delay_flap'])
+    time.sleep(parse_time_str(setup['delay_flap']))
 
 # make sure interval is set correct
 if 'interval_flap' not in setup:
     interval = '1s'
 else:
     interval = setup['interval_flap']
-if isinstance(interval, int):
-    pass
-elif interval.isnumeric():
-    interval = int(interval)
-elif interval.endswith("us"):
-    interval = int(interval[:-2]) / 1000000
-elif interval.endswith("ms"):
-    interval = int(interval[:-2]) / 1000
-elif interval.endswith("s"):
-    interval = int(interval[:-1])
-else:
-    print("Could not set interval!")
-    sys.exit(1)
+interval = parse_time_str(interval)
 
 # now we start to flap
 announce = False

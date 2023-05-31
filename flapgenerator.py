@@ -28,8 +28,9 @@ def get_announce(nlri, attributes):
 
 
 def routeflap(args):
-    if args.flapping > args.routes:
+    if int(args.flapping) > int(args.routes):
         print('Number of routes has to be greater or equal to number of flapping routes.')
+        print(f"You requested _{args.routes}_ routes with _{args.flapping}_ of them flapping.")
         sys.exit(1)
 
     setup = {
@@ -43,10 +44,10 @@ def routeflap(args):
     routes4 = {}
     if args.ipv4network != '':
         net4 = ip_network(args.ipv4network).hosts()
-        for i in range(0, args.routes):
+        for i in range(0, int(args.routes)):
             routes4[str(net4.__next__())+'/32'] = {}
         pick_route = 0
-        for i in range(0, args.flapping):
+        for i in range(0, int(args.flapping)):
             setup['flapping'].append(list(routes4.keys())[pick_route])
             pick_route = (pick_route + 3) % len(routes4)
 
@@ -71,7 +72,11 @@ def routeflap(args):
             pick_route = (pick_route + 3) % len(routes6)
 
     setup['routes'] = {**routes4, **routes6}
-    del net4, net6, i, subnet, pick_route, routes4, routes6
+    del i, pick_route
+    if args.ipv4network != '':
+        del net4, routes4
+    if args.ipv6network != '':
+        del net6, routes6, subnet
 
     with open("/tmp/flapgenerator_setup.json", "w") as f:
         f.write(json.dumps(setup, indent=4))

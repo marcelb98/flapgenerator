@@ -28,9 +28,9 @@ def get_announce(nlri, attributes):
 
 
 def routeflap(args):
-    if int(args.flapping) > int(args.routes):
+    if int(args.flapping)+int(args.flappingB) > int(args.routes):
         print('Number of routes has to be greater or equal to number of flapping routes.')
-        print(f"You requested _{args.routes}_ routes with _{args.flapping}_ of them flapping.")
+        print(f"You requested _{args.routes}_ routes with _{args.flapping+args.flappingB}_ of them flapping.")
         sys.exit(1)
 
     setup = {
@@ -38,7 +38,8 @@ def routeflap(args):
         'delay_flap': args.delayflap,
         'interval_flap': args.intervalflap,
         'routes': {},
-        'flapping': []
+        'flapping': [],
+        'flappingB': []
     }
 
     routes4 = {}
@@ -50,6 +51,9 @@ def routeflap(args):
         for i in range(0, int(args.flapping)):
             setup['flapping'].append(list(routes4.keys())[pick_route])
             pick_route = (pick_route + 3) % len(routes4)
+        for i in range(0, int(args.flappingB)):
+            setup['flappingB'].append(list(routes4.keys())[pick_route])
+            pick_route = (pick_route + 3) % len(routes4)
 
     routes6 = {}
     if args.ipv6network != '':
@@ -59,7 +63,7 @@ def routeflap(args):
             sys.exit(1)
 
         subnet = net6.hosts().__next__() - 1
-        for i in range(0, args.routes):
+        for i in range(0, int(args.routes)):
             if ip_network(str(subnet)+'/64').hosts().__next__() not in net6:
                 print('IPv6 network not big enough to create requested number of subnets.')
                 sys.exit(1)
@@ -67,8 +71,11 @@ def routeflap(args):
             subnet = subnet + 2**64
 
         pick_route = 0
-        for i in range(0, args.flapping):
+        for i in range(0, int(args.flapping)):
             setup['flapping'].append(list(routes6.keys())[pick_route])
+            pick_route = (pick_route + 3) % len(routes6)
+        for i in range(0, int(args.flappingB)):
+            setup['flappingB'].append(list(routes6.keys())[pick_route])
             pick_route = (pick_route + 3) % len(routes6)
 
     setup['routes'] = {**routes4, **routes6}
@@ -90,6 +97,7 @@ def create_args_parser():
     parser_routeflap = s.add_parser('routeflap', help='create a peer with routeflaps')
     parser_routeflap.add_argument('-r', '--routes', default=10, help='number of (not flapping) routes to announce (for each of IPv4 and IPv6)')
     parser_routeflap.add_argument('-f', '--flapping', default=5, help='number of flapping routes to announce, has to be <= -r (for each of IPv4 and IPv6)')
+    parser_routeflap.add_argument('-fB', '--flappingB', default=0, help='number of routes flapping inverse to --flapping, --flapping + --flappingB has to be <= -r')
     parser_routeflap.add_argument('-4', '--ipv4network', default='', help='IPv4 network to use for address generation')
     parser_routeflap.add_argument('-6', '--ipv6network', default='', help='IPv6 network to use for subnet generation')
     parser_routeflap.add_argument('-ds', '--delaystart', default=0, help='time to wait before anything is announced')

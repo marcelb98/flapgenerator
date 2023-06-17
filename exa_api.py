@@ -52,17 +52,21 @@ with open("/tmp/flapgenerator_setup.json", "r") as f:
         sys.exit(1)
 routes = setup['routes']
 flapping = setup['flapping']
+flappingB = setup['flappingB']
 
 # prepare exabgp commands for all routes once
 routes_exa = {}
 for route in routes:
     routes_exa[route] = get_announce(route, routes[route])
 flapping_exa = {}
+flappingB_exa = {}
 for route in flapping:
     flapping_exa[route] = f"withdraw route {route} next-hop self\n"
+for route in flappingB:
+    flappingB_exa[route] = f"withdraw route {route} next-hop self\n"
 
 # free up memory
-del routes, flapping
+del routes, flapping, flappingB
 
 # wait requested start time
 if 'delay_start' in setup:
@@ -85,13 +89,18 @@ else:
 interval = parse_time_str(interval)
 
 # now we start to flap
-announce = False
+announce = False # True → flapping will be announced, flappingB withdrawn; False → contrary
 while True:
-    for route in flapping_exa:
-        if announce:
+    if announce:
+        for route in flapping_exa:
             sys.stdout.write(routes_exa[route])
-        else:
+        for route in flappingB_exa:
+            sys.stdout.write(flappingB_exa[route])
+    else:
+        for route in flapping_exa:
             sys.stdout.write(flapping_exa[route])
+        for route in flappingB_exa:
+            sys.stdout.write(routes_exa[route])
     sys.stdout.flush()
 
     announce = not announce

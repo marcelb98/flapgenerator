@@ -47,3 +47,9 @@ block to each neighbor you want to send routes (including the flapping ones) to.
 Start ExaBGP by running `exabgp ./exa.config`.
 
 ### 4. Profit
+
+# Interval parsing
+To generate statistics abouth how often BGP UPDATE messages were sent, you can capture the traffic using tcpdump and pipe it through `interval_parse.py` to generate a CSV file:
+
+`tcpdump -i virbr0 -ttt dst 192.168.122.44 and tcp port 179 | ./interval_parse.py > 100ms.csv`
+
